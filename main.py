@@ -5,11 +5,27 @@ from discord import app_commands
 from dotenv import load_dotenv
 from create_gif import create_dynamic_gif
 import requests
+import json
 
 
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
+STATS_FILE = "bot_stats.json"
+
+
+def load_stats():
+    if os.path.exists(STATS_FILE):
+        with open(STATS_FILE, "r") as f:
+            return json.load(f)
+    return {"gifs_generated": 0, "servers_count": 0}
+
+
+def save_stats(stats):
+    with open(STATS_FILE, "w") as f:
+        json.dump(stats, f, indent=2)
+
+stats = load_stats()
 
 
 async def fetch_random_quote():
@@ -35,7 +51,15 @@ async def update_status():
 async def on_ready():
     print(f"Connected as {bot.user}")
     await bot.tree.sync()
+    stats["servers_count"] = len(bot.guilds)
+    save_stats(stats)
     update_status.start()
+
+
+def make_gif(author, text):
+    stats["gifs_generated"] += 1
+    save_stats(stats)
+    return create_dynamic_gif(author, text)
 
 
 @bot.tree.context_menu(name="Quote")
@@ -47,7 +71,7 @@ async def quote_context(interaction: discord.Interaction, message: discord.Messa
         )
         return
     try:
-        gif_buf = create_dynamic_gif(message.author.display_name, message.content)
+        gif_buf = make_gif(message.author.display_name, message.content)
         await interaction.followup.send(
             file=discord.File(gif_buf, filename="quote.gif")
         )
@@ -73,7 +97,7 @@ async def quote_cmd(ctx, *, arg=None):
         return await ctx.send("The target message has no text content.")
 
     try:
-        gif_buf = create_dynamic_gif(msg.author.display_name, msg.content)
+        gif_buf = make_gif(msg.author.display_name, msg.content)
         await ctx.send(file=discord.File(gif_buf, filename="quote.gif"))
     except Exception as e:
         print(f"Error creating GIF: {e}")
@@ -102,7 +126,7 @@ async def quote(interaction: discord.Interaction, message_id: str = None):
         return
 
     try:
-        gif_buf = create_dynamic_gif(msg.author.display_name, msg.content)
+        gif_buf = make_gif(msg.author.display_name, msg.content)
         await interaction.followup.send(file=discord.File(gif_buf, filename="quote.gif"))
     except Exception as e:
         print(f"Error creating GIF: {e}")
