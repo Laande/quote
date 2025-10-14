@@ -5,10 +5,10 @@ import imageio
 import random
 import os
 
-GIF_SIZE = (960, 540)
+GIF_SIZE = (480, 270)
 FONT_PATH = "arial.ttf"
-FONT_SIZE = 72
-FRAME_DURATION = 20
+FONT_SIZE = 40
+FRAME_DURATION = 30
 BACKGROUNDS_DIR = "backgrounds"
 
 def _choose_background():
@@ -49,7 +49,7 @@ def choose_word_position(prev_x, prev_w, word_w, gif_w, max_shift=40):
             x = 10
     return x
 
-def compute_display_frames(word, font, draw, base_frames=10, time_per_pixel=0.08):
+def compute_display_frames(word, font, draw, base_frames=10, time_per_pixel=0.15):
     w, _ = _measure_text(draw, word, font)
     return base_frames + int(w * time_per_pixel)
 
@@ -81,7 +81,7 @@ def create_dynamic_gif(author, text):
     if bg_path:
         bg = Image.open(bg_path).convert("RGBA")
         bg = bg.resize(GIF_SIZE, Image.LANCZOS)
-        bg = bg.filter(ImageFilter.GaussianBlur(radius=2))
+        bg = bg.filter(ImageFilter.GaussianBlur(radius=1.3))
     else:
         bg = Image.new("RGBA", GIF_SIZE, (30,30,60,255))
     W,H = GIF_SIZE
@@ -98,9 +98,9 @@ def create_dynamic_gif(author, text):
         draw_temp = ImageDraw.Draw(temp_img)
         while i < len(words):
             lines, w_w, w_h = get_wrapped_lines(draw_temp, words[i], font)
-            if line_width + w_w + 10 <= max_width or len(current_line)==0:
+            if line_width + w_w + 7 <= max_width or len(current_line)==0:
                 current_line.append(words[i])
-                line_width += w_w + 10
+                line_width += w_w + 7
                 i += 1
             else:
                 break
