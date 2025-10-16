@@ -6,7 +6,7 @@ import random
 import os
 
 GIF_SIZE = (480, 270)
-FONT_PATH = "arial.ttf"
+FONT_PATH = "Segoe.ttf"
 FONT_SIZE = 40
 FRAME_DURATION = 30
 BACKGROUNDS_DIR = "backgrounds"
