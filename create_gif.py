@@ -49,7 +49,7 @@ def choose_word_position(prev_x, prev_w, word_w, gif_w, max_shift=40):
             x = 10
     return x
 
-def compute_display_frames(word, font, draw, base_frames=10, time_per_pixel=0.15):
+def compute_display_frames(word, font, draw, base_frames=10, time_per_pixel=0.1):
     w, _ = _measure_text(draw, word, font)
     return base_frames + int(w * time_per_pixel)
 
