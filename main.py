@@ -133,6 +133,19 @@ async def quote(interaction: discord.Interaction, message_id: str = None):
         await interaction.followup.send("Failed to create GIF for this message.", ephemeral=True)
 
 
+@bot.tree.command(name="help", description="Show how to use the Quote bot")
+async def help_cmd(interaction: discord.Interaction):
+    message = (
+        "- Can be used by right-clicking a message, then selecting **Apps → Quote**\n"
+        "- It also works with `!quote [msg]`\n"
+        "the `msg` argument is optional; you can simply reply to the message you want to quote with the command\n"
+        "- It also works as a slash command: `/quote <msg>`\n"
+        "where `msg` can be the message ID or its URL\n\n"
+        "[Support server](https://discord.gg/EbJduC5gE2)"
+    )
+    await interaction.response.send_message(message, ephemeral=True)
+
+
 if __name__ == "__main__":
     load_dotenv()
     bot.run(os.getenv("TOKEN"))
