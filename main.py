@@ -47,12 +47,20 @@ async def update_status():
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=quote))
 
 
+@tasks.loop(hours=10)
+async def update_server_count():
+    try: 
+        stats["servers_count"] = len(bot.guilds)
+        save_stats(stats)
+    except Exception as e:
+        print(f"Failed to update server count: {e}")
+
+
 @bot.event
 async def on_ready():
     print(f"Connected as {bot.user}")
     await bot.tree.sync()
-    stats["servers_count"] = len(bot.guilds)
-    save_stats(stats)
+    update_server_count.start()
     update_status.start()
 
 
