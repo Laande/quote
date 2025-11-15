@@ -49,11 +49,10 @@ async def update_status():
 
 @tasks.loop(hours=10)
 async def update_server_count():
-    try: 
-        stats["servers_count"] = len(bot.guilds)
-        save_stats(stats)
-    except Exception as e:
-        print(f"Failed to update server count: {e}")
+    app_info = await bot.application_info()
+    stats["servers_count"] = app_info.approximate_guild_count
+    stats["users_count"] = app_info.approximate_user_install_count
+    save_stats(stats)
 
 
 @bot.event
