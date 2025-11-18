@@ -1,17 +1,19 @@
 import os
+import requests
+import json
 import discord
 from discord.ext import commands, tasks
 from discord import app_commands
 from dotenv import load_dotenv
+from concurrent.futures import ProcessPoolExecutor
 from create_gif import create_dynamic_gif
-import requests
-import json
 
 
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 STATS_FILE = "bot_stats.json"
+executor = ProcessPoolExecutor(max_workers=2, max_tasks_per_child=5)
 
 
 def load_stats():
@@ -66,7 +68,9 @@ async def on_ready():
 def make_gif(author, text):
     stats["gifs_generated"] += 1
     save_stats(stats)
-    return create_dynamic_gif(author, text)
+    
+    future = executor.submit(create_dynamic_gif, author, text)
+    return future.result()
 
 
 @bot.tree.context_menu(name="Quote")
