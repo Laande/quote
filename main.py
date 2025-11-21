@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands, tasks
 from discord import app_commands
 from dotenv import load_dotenv
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from create_gif import create_dynamic_gif
 
 
@@ -13,7 +13,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 STATS_FILE = "bot_stats.json"
-executor = ProcessPoolExecutor(max_workers=2, max_tasks_per_child=5)
+executor = ThreadPoolExecutor(max_workers=2)
 
 
 def load_stats():
