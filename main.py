@@ -72,47 +72,44 @@ def make_gif(author, text):
     future = executor.submit(create_dynamic_gif, author, text)
     return future.result()
 
+async def send_quote_gif(interaction, author_name, text):
+    if not text:
+        await interaction.followup.send("No text to generate a quote.", ephemeral=True)
+        return
+    
+    try:
+        gif_buf = await make_gif(author_name, text)
+        await interaction.followup.send(file=discord.File(gif_buf, filename="quote.gif"))
+    except Exception as e:
+        print(f"Error creating GIF: {e}")
+        await interaction.followup.send("Failed to create GIF", ephemeral=True)
+
+async def handle_quote(interaction, message: discord.Message):
+    if not message.content:
+        await interaction.followup.send("This message has no text content to quote", ephemeral=True)
+        return
+    
+    await send_quote_gif(interaction, message.author.display_name, message.content)
 
 @tree.context_menu(name="Quote")
 async def quote_context(interaction: discord.Interaction, message: discord.Message):
     await interaction.response.defer()
-    if not message.content:
-        await interaction.followup.send(
-            "This message has no text content to quote", ephemeral=True
-        )
-        return
-    try:
-        gif_buf = make_gif(message.author.display_name, message.content)
-        await interaction.followup.send(
-            file=discord.File(gif_buf, filename="quote.gif")
-        )
-    except Exception as e:
-        print(f"Error creating GIF: {e}")
-        await interaction.followup.send("Failed to create GIF for this message", ephemeral=True)
+    await handle_quote(interaction, message)
 
 
 @tree.command(name="quote", description="Create a GIF quote from a message link or ID")
 @app_commands.describe(message_link="Message link or ID to quote")
-async def quote(interaction: discord.Interaction, message_id: str):
+async def quote_cmd(interaction: discord.Interaction, message_link: str):
     await interaction.response.defer()
-    
+
     try:
-        msg_id = int(message_id.split("/")[-1])
+        msg_id = int(message_link.split("/")[-1])
         msg = await interaction.channel.fetch_message(msg_id)
     except Exception:
         await interaction.followup.send("Invalid message ID or link", ephemeral=True)
         return
 
-    if not msg.content:
-        await interaction.followup.send("This message has no text content to quote", ephemeral=True)
-        return
-
-    try:
-        gif_buf = make_gif(msg.author.display_name, msg.content)
-        await interaction.followup.send(file=discord.File(gif_buf, filename="quote.gif"))
-    except Exception as e:
-        print(f"Error creating GIF: {e}")
-        await interaction.followup.send("Failed to create GIF", ephemeral=True)
+    await handle_quote(interaction, msg)
 
 
 @tree.command(name="customquote", description="Create a custom GIF quote with your own text")
@@ -122,19 +119,13 @@ async def quote(interaction: discord.Interaction, message_id: str):
 )
 async def customquote(interaction: discord.Interaction, text: str, author: str = None):
     await interaction.response.defer()
-    
+
     if len(text) > 500:
         await interaction.followup.send("Text is too long, maximum 500 characters", ephemeral=True)
         return
-    
+
     author_name = author if author else interaction.user.display_name
-    
-    try:
-        gif_buf = make_gif(author_name, text)
-        await interaction.followup.send(file=discord.File(gif_buf, filename="quote.gif"))
-    except Exception as e:
-        print(f"Error creating GIF: {e}")
-        await interaction.followup.send("Failed to create GIF", ephemeral=True)
+    await send_quote_gif(interaction, author_name, text)
 
 
 @tree.command(name="help", description="Show how to use the Quote bot")
