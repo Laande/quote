@@ -10,7 +10,6 @@ from create_gif import create_dynamic_gif
 
 
 intents = discord.Intents.default()
-intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 STATS_FILE = "bot_stats.json"
 executor = ThreadPoolExecutor(max_workers=2)
@@ -90,29 +89,6 @@ async def quote_context(interaction: discord.Interaction, message: discord.Messa
         print(f"Error creating GIF: {e}")
         await interaction.followup.send("Failed to create GIF for this message", ephemeral=True)
 
-@bot.command(name="quote")
-async def quote_cmd(ctx, *, arg=None):
-    msg = None
-    if ctx.message.reference:
-        msg = await ctx.channel.fetch_message(ctx.message.reference.message_id)
-    elif arg:
-        try:
-            msg_id = int(arg.split("/")[-1])
-            msg = await ctx.channel.fetch_message(msg_id)
-        except Exception:
-            return await ctx.send("Invalid message ID or link.")
-    else:
-        return await ctx.send("Please reply to a message or provide a message ID/link.")
-
-    if not msg.content:
-        return await ctx.send("The target message has no text content.")
-
-    try:
-        gif_buf = make_gif(msg.author.display_name, msg.content)
-        await ctx.send(file=discord.File(gif_buf, filename="quote.gif"))
-    except Exception as e:
-        print(f"Error creating GIF: {e}")
-        await ctx.send("Failed to create GIF for this message.")
 
 
 @bot.tree.command(name="quote", description="Create a GIF quote from a message")
