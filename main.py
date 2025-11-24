@@ -78,7 +78,7 @@ async def send_quote_gif(interaction, author_name, text):
         return
     
     try:
-        gif_buf = await make_gif(author_name, text)
+        gif_buf = make_gif(author_name, text)
         await interaction.followup.send(file=discord.File(gif_buf, filename="quote.gif"))
     except Exception as e:
         print(f"Error creating GIF: {e}")
@@ -113,19 +113,15 @@ async def quote_cmd(interaction: discord.Interaction, message_link: str):
 
 
 @tree.command(name="customquote", description="Create a custom GIF quote with your own text")
-@app_commands.describe(
-    text="The quote text to display",
-    author="Author name (optional, defaults to your username)"
-)
-async def customquote(interaction: discord.Interaction, text: str, author: str = None):
+@app_commands.describe(text="The quote text to display")
+async def customquote(interaction: discord.Interaction, text: str):
     await interaction.response.defer()
 
     if len(text) > 500:
         await interaction.followup.send("Text is too long, maximum 500 characters", ephemeral=True)
         return
 
-    author_name = author if author else interaction.user.display_name
-    await send_quote_gif(interaction, author_name, text)
+    await send_quote_gif(interaction, interaction.user.display_name, text)
 
 
 @tree.command(name="help", description="Show how to use the Quote bot")
@@ -150,7 +146,7 @@ async def help_cmd(interaction: discord.Interaction):
     
     embed.add_field(
         name="Custom quote",
-        value="`/customquote <your text> [author name]`\nCreate a quote with your own text!",
+        value="`/customquote <your text>`\nCreate a quote with your own text",
         inline=False
     )
     
