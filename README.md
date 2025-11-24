@@ -1,8 +1,8 @@
 # Discord Quote Bot
 
-A discord bot for quoting message in a gif
+A Discord bot to create animated GIF quotes from messages
 
-Work on client & server
+Works on servers and as user-installed app
 
 ## Preview
 
