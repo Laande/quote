@@ -126,7 +126,7 @@ async def customquote(interaction: discord.Interaction, text: str):
 
 @tree.command(name="help", description="Show how to use the Quote bot")
 async def help_cmd(interaction: discord.Interaction):
-    await interaction.response.defer()
+    await interaction.response.defer(ephemeral=True)
     
     embed = discord.Embed(
         title="Quote Bot",
@@ -154,7 +154,7 @@ async def help_cmd(interaction: discord.Interaction):
     
     embed.set_footer(text="Support: discord.gg/EbJduC5gE2")
     
-    await interaction.followup.send(embed=embed, ephemeral=True)
+    await interaction.followup.send(embed=embed)
 
 
 if __name__ == "__main__":
