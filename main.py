@@ -7,6 +7,7 @@ from discord import app_commands
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
 from create_gif import create_dynamic_gif
+import gc
 
 
 intents = discord.Intents.default()
@@ -70,7 +71,10 @@ def make_gif(author, text):
     save_stats(stats)
     
     future = executor.submit(create_dynamic_gif, author, text)
-    return future.result()
+    result = future.result()
+    
+    gc.collect()
+    return result
 
 async def send_quote_gif(interaction, author_name, text):
     if not text:
@@ -80,6 +84,9 @@ async def send_quote_gif(interaction, author_name, text):
     try:
         gif_buf = make_gif(author_name, text)
         await interaction.followup.send(file=discord.File(gif_buf, filename="quote.gif"))
+        
+        gif_buf.close()
+        del gif_buf
     except Exception as e:
         print(f"Error creating GIF: {e}")
         await interaction.followup.send("Failed to create GIF", ephemeral=True)

@@ -72,16 +72,17 @@ def create_frames_for_word(bg, font, author_font, author, shown_words, word_line
     draw.text((W-aw-20, H-ah-20), f"- {author}", font=author_font, fill=(220,220,220,230))
     num_frames = compute_display_frames(word_lines[0], font, draw)
     for _ in range(num_frames):
-        frames.append(frame_img)
+        frames.append(frame_img.copy())
     return frames
 
 def create_dynamic_gif(author, text):
     words = text.split()
     bg_path = _choose_background()
     if bg_path:
-        bg = Image.open(bg_path).convert("RGBA")
-        bg = bg.resize(GIF_SIZE, Image.LANCZOS)
-        bg = bg.filter(ImageFilter.GaussianBlur(radius=1.3))
+        with Image.open(bg_path) as img:
+            bg = img.convert("RGBA")
+            bg = bg.resize(GIF_SIZE, Image.LANCZOS)
+            bg = bg.filter(ImageFilter.GaussianBlur(radius=1.3))
     else:
         bg = Image.new("RGBA", GIF_SIZE, (30,30,60,255))
     W,H = GIF_SIZE
@@ -89,13 +90,16 @@ def create_dynamic_gif(author, text):
     colors = [(255,255,255),(255,200,200),(200,255,200),(200,200,255),(255,255,100),(255,150,0)]
     font = ImageFont.truetype(FONT_PATH, FONT_SIZE)
     author_font = ImageFont.truetype(FONT_PATH, int(FONT_SIZE*0.5))
+
+    temp_img = Image.new("RGBA",(1,1))
+    draw_temp = ImageDraw.Draw(temp_img)
+    
     i = 0
     while i < len(words):
         current_line = []
         line_width = 0
         max_width = int(W*0.8)
-        temp_img = Image.new("RGBA",(1,1))
-        draw_temp = ImageDraw.Draw(temp_img)
+
         while i < len(words):
             lines, w_w, w_h = get_wrapped_lines(draw_temp, words[i], font)
             if line_width + w_w + 7 <= max_width or len(current_line)==0:
