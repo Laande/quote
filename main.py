@@ -52,10 +52,15 @@ async def update_status():
 
 @tasks.loop(hours=10)
 async def update_server_count():
-    app_info = await client.application_info()
-    stats["servers_count"] = app_info.approximate_guild_count
-    stats["users_count"] = app_info.approximate_user_install_count
-    save_stats(stats)
+    try:
+        app_info = await client.application_info()
+        stats["servers_count"] = app_info.approximate_guild_count
+        stats["users_count"] = app_info.approximate_user_install_count
+        save_stats(stats)
+    except AttributeError:
+        stats["servers_count"] = len(client.guilds)
+        stats["users_count"] = len(client.users)
+        save_stats(stats)
 
 
 @client.event
