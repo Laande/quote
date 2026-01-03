@@ -5,16 +5,15 @@ import discord
 from discord.ext import tasks
 from discord import app_commands
 from dotenv import load_dotenv
-from concurrent.futures import ThreadPoolExecutor
 from create_gif import create_dynamic_gif
 import gc
+import asyncio
 
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 STATS_FILE = "bot_stats.json"
-executor = ThreadPoolExecutor(max_workers=2)
 
 
 def load_stats():
@@ -71,12 +70,11 @@ async def on_ready():
     update_status.start()
 
 
-def make_gif(author, text):
+async def make_gif(author, text):
     stats["gifs_generated"] += 1
     save_stats(stats)
     
-    future = executor.submit(create_dynamic_gif, author, text)
-    result = future.result()
+    result = await asyncio.to_thread(create_dynamic_gif, author, text)
     
     gc.collect()
     return result
@@ -87,7 +85,7 @@ async def send_quote_gif(interaction, author_name, text):
         return
     
     try:
-        gif_buf = make_gif(author_name, text)
+        gif_buf = await make_gif(author_name, text)
         await interaction.followup.send(file=discord.File(gif_buf, filename="quote.gif"))
         
         gif_buf.close()
