@@ -6,7 +6,6 @@ from discord.ext import tasks
 from discord import app_commands
 from dotenv import load_dotenv
 from create_gif import create_dynamic_gif
-import gc
 import asyncio
 
 
@@ -30,14 +29,17 @@ def save_stats(stats):
 stats = load_stats()
 
 
+def _fetch_quote_sync():
+    req = requests.get("http://api.quotable.io/random", timeout=5)
+    if req.status_code == 200:
+        data = req.json()
+        return f"{data['content']} - {data['author']}"
+    return "An inspirational quote. - Lande"
+
+
 async def fetch_random_quote():
     try:
-        req = requests.get("http://api.quotable.io/random", timeout=5)
-        if req.status_code == 200:
-            data = req.json()
-            return f"{data['content']} - {data['author']}"
-        else:
-            return "An inspirational quote. - Lande"
+        return await asyncio.to_thread(_fetch_quote_sync)
     except Exception as e:
         print(f"Failed to fetch quote: {e}")
         return "An inspirational quote. - Lande"
@@ -75,8 +77,6 @@ async def make_gif(author, text):
     save_stats(stats)
     
     result = await asyncio.to_thread(create_dynamic_gif, author, text)
-    
-    gc.collect()
     return result
 
 async def send_quote_gif(interaction, author_name, text):
@@ -86,10 +86,8 @@ async def send_quote_gif(interaction, author_name, text):
     
     try:
         gif_buf = await make_gif(author_name, text)
-        await interaction.followup.send(file=discord.File(gif_buf, filename="quote.gif"))
-        
-        gif_buf.close()
-        del gif_buf
+        file = discord.File(fp=gif_buf, filename="quote.gif")
+        await interaction.followup.send(file=file)
     except Exception as e:
         print(f"Error creating GIF: {e}")
         await interaction.followup.send("Failed to create GIF", ephemeral=True)

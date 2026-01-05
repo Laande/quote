@@ -4,7 +4,6 @@ import textwrap
 import imageio
 import random
 import os
-import gc
 
 GIF_SIZE = (480, 270)
 FONT_PATH = "Segoe.ttf"
@@ -75,8 +74,6 @@ def create_frames_for_word(bg, font, author_font, author, shown_words, word_line
     for _ in range(num_frames):
         frames.append(frame_img.copy())
     
-    del frame_img
-    del draw
     return frames
 
 def create_dynamic_gif(author, text):
@@ -127,24 +124,9 @@ def create_dynamic_gif(author, text):
             prev_w = word_w
             y_offset += word_h + 5
     
-    del temp_img
-    del draw_temp
-    del bg
-    
     bio = BytesIO()
-    try:
-        frames_for_imageio = [f.convert("RGBA") for f in frames]
-        imageio.mimsave(bio, frames_for_imageio, format="GIF", duration=FRAME_DURATION, loop=0)
-    finally:
-        for f in frames:
-            if hasattr(f, 'close'):
-                f.close()
-        for f in frames_for_imageio:
-            if hasattr(f, 'close'):
-                f.close()
-        del frames
-        del frames_for_imageio
-        gc.collect()
+    frames_for_imageio = [f.convert("RGBA") for f in frames]
+    imageio.mimsave(bio, frames_for_imageio, format="GIF", duration=FRAME_DURATION, loop=0)
     
     bio.seek(0)
     return bio
