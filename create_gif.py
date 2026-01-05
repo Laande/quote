@@ -108,8 +108,6 @@ def create_frames_for_word(
     num_frames = compute_display_frames(word_lines[0], font, draw)
 
     for _ in range(num_frames):
-        frames.append(frame_img)
-
         frames.append(frame_img.copy())
     
     return frames
