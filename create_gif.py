@@ -110,6 +110,8 @@ def create_frames_for_word(
     for _ in range(num_frames):
         frames.append(frame_img)
 
+        frames.append(frame_img.copy())
+    
     return frames
 
 
@@ -203,5 +205,10 @@ def create_dynamic_gif(author, text):
         # Fallback if no frames generated
         imageio.mimsave(bio, [bg], format="GIF", duration=FRAME_DURATION, loop=0)
 
+    
+    bio = BytesIO()
+    frames_for_imageio = [f.convert("RGBA") for f in frames]
+    imageio.mimsave(bio, frames_for_imageio, format="GIF", duration=FRAME_DURATION, loop=0)
+    
     bio.seek(0)
     return bio
