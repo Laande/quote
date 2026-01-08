@@ -84,6 +84,7 @@ async def send_quote_gif(interaction, author_name, text):
         await interaction.followup.send("No text to generate a quote.", ephemeral=True)
         return
     
+    gif_buf = None
     try:
         gif_buf = await make_gif(author_name, text)
         file = discord.File(fp=gif_buf, filename="quote.gif")
@@ -91,6 +92,10 @@ async def send_quote_gif(interaction, author_name, text):
     except Exception as e:
         print(f"Error creating GIF: {e}")
         await interaction.followup.send("Failed to create GIF", ephemeral=True)
+    finally:
+        if gif_buf is not None:
+            gif_buf.close()
+            del gif_buf
 
 async def handle_quote(interaction, message: discord.Message):
     if not message.content:
