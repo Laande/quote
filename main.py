@@ -10,7 +10,11 @@ import asyncio
 
 
 intents = discord.Intents.default()
-client = discord.Client(intents=intents)
+client = discord.Client(
+    intents=intents,
+    max_messages=None,
+    member_cache_flags=discord.MemberCacheFlags.none()
+)
 tree = app_commands.CommandTree(client)
 STATS_FILE = "bot_stats.json"
 
