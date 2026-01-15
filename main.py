@@ -123,11 +123,38 @@ async def quote_context(interaction: discord.Interaction, message: discord.Messa
 async def quote_cmd(interaction: discord.Interaction, message_link: str):
     await interaction.response.defer()
 
+    if interaction.guild is None:
+        await interaction.followup.send("This command can only be used in a server", ephemeral=True)
+        return
+    
     try:
-        msg_id = int(message_link.split("/")[-1])
-        msg = await interaction.channel.fetch_message(msg_id)
+        parts = message_link.split("/")
+        if len(parts) >= 3 and "discord.com/channels/" in message_link:
+            guild_id = int(parts[-3])
+            channel_id = int(parts[-2])
+            msg_id = int(parts[-1])
+
+            if guild_id != interaction.guild_id:
+                await interaction.followup.send("Cannot quote messages from other servers", ephemeral=True)
+                return
+
+            channel = await client.fetch_channel(channel_id)
+            msg = await channel.fetch_message(msg_id)
+        else:
+            msg_id = int(message_link)
+            msg = await interaction.channel.fetch_message(msg_id)
+
+    except ValueError:
+        await interaction.followup.send("Invalid message link or ID format", ephemeral=True)
+        return
+    except discord.NotFound:
+        await interaction.followup.send("Message not found", ephemeral=True)
+        return
+    except discord.Forbidden:
+        await interaction.followup.send("Bot doesn't have permission to access that message", ephemeral=True)
+        return
     except Exception:
-        await interaction.followup.send("Invalid message ID or link", ephemeral=True)
+        await interaction.followup.send("Failed to fetch message", ephemeral=True)
         return
 
     await handle_quote(interaction, msg)
