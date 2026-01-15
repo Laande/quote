@@ -106,6 +106,10 @@ async def handle_quote(interaction, message: discord.Message):
         await interaction.followup.send("This message has no text content to quote", ephemeral=True)
         return
     
+    if len(message.content) > 500:
+        await interaction.followup.send(f"Message too long ({len(message.content)} characters). Maximum is 500 characters.", ephemeral=True)
+        return
+    
     await send_quote_gif(interaction, message.author.display_name, message.content)
 
 @tree.context_menu(name="Quote")
@@ -135,7 +139,7 @@ async def customquote(interaction: discord.Interaction, text: str):
     await interaction.response.defer()
 
     if len(text) > 500:
-        await interaction.followup.send("Text is too long, maximum 500 characters", ephemeral=True)
+        await interaction.followup.send(f"Text is too long ({len(text)} characters), maximum 500 characters", ephemeral=True)
         return
 
     await send_quote_gif(interaction, interaction.user.display_name, text)
