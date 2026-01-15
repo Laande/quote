@@ -196,17 +196,13 @@ def create_dynamic_gif(author, text):
             y_offset += word_h + 5
 
     bio = BytesIO()
-
+    
     if frames:
-        imageio.mimsave(bio, frames, format="GIF", duration=FRAME_DURATION, loop=0)
+        frames_for_imageio = [f.convert("RGB") for f in frames]
+        imageio.mimsave(bio, frames_for_imageio, format="GIF", duration=FRAME_DURATION, loop=0)
     else:
         # Fallback if no frames generated
-        imageio.mimsave(bio, [bg], format="GIF", duration=FRAME_DURATION, loop=0)
-
-    
-    bio = BytesIO()
-    frames_for_imageio = [f.convert("RGBA") for f in frames]
-    imageio.mimsave(bio, frames_for_imageio, format="GIF", duration=FRAME_DURATION, loop=0)
+        imageio.mimsave(bio, [bg.convert("RGB")], format="GIF", duration=FRAME_DURATION, loop=0)
     
     bio.seek(0)
     return bio
