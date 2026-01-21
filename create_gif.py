@@ -3,7 +3,6 @@ import random
 import textwrap
 from io import BytesIO
 
-import imageio
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 GIF_SIZE = (480, 270)
@@ -86,7 +85,6 @@ def draw_text_with_shadow(
 def create_frames_for_word(
     bg, font, author_font, author, shown_words, word_lines, x, y, colors
 ):
-    frames = []
     W, H = bg.size
     word_color = random.choice(colors)
     shown_words.append((word_lines, x, y, word_color))
@@ -106,11 +104,8 @@ def create_frames_for_word(
     )
 
     num_frames = compute_display_frames(word_lines[0], font, draw)
-
-    for _ in range(num_frames):
-        frames.append(frame_img.copy())
     
-    return frames
+    return frame_img, num_frames
 
 
 def create_dynamic_gif(author, text):
@@ -119,11 +114,11 @@ def create_dynamic_gif(author, text):
 
     if bg_path:
         with Image.open(bg_path) as img:
-            bg = img.convert("RGBA")
+            bg = img.convert("RGB")
             bg = bg.resize(GIF_SIZE, Image.LANCZOS)
             bg = bg.filter(ImageFilter.GaussianBlur(radius=1.3))
     else:
-        bg = Image.new("RGBA", GIF_SIZE, (30, 30, 60, 255))
+        bg = Image.new("RGB", GIF_SIZE, (30, 30, 60))
 
     W, H = GIF_SIZE
     frames = []
@@ -148,6 +143,9 @@ def create_dynamic_gif(author, text):
     draw_temp = ImageDraw.Draw(temp_img)
 
     i = 0
+    frames = []
+    durations = []
+    
     while i < len(words):
         current_line = []
         line_width = 0
@@ -186,10 +184,11 @@ def create_dynamic_gif(author, text):
             y = start_y + y_offset + random.randint(-5, 5)
             x = choose_word_position(prev_x, prev_w, word_w, W)
 
-            # Add to main frames list
-            frames += create_frames_for_word(
+            frame, duration = create_frames_for_word(
                 bg, font, author_font, author, shown_words, lines, x, y, colors
             )
+            frames.append(frame)
+            durations.append(FRAME_DURATION * duration)
 
             prev_x = x
             prev_w = word_w
@@ -198,11 +197,17 @@ def create_dynamic_gif(author, text):
     bio = BytesIO()
     
     if frames:
-        frames_for_imageio = [f.convert("RGB") for f in frames]
-        imageio.mimsave(bio, frames_for_imageio, format="GIF", duration=FRAME_DURATION, loop=0)
+        frames[0].save(
+            bio,
+            format='GIF',
+            save_all=True,
+            append_images=frames[1:],
+            duration=durations,
+            loop=0,
+            optimize=False
+        )
     else:
-        # Fallback if no frames generated
-        imageio.mimsave(bio, [bg.convert("RGB")], format="GIF", duration=FRAME_DURATION, loop=0)
+        bg.save(bio, format='GIF', duration=FRAME_DURATION, loop=0)
     
     bio.seek(0)
     return bio
