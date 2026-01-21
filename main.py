@@ -101,9 +101,18 @@ async def send_quote_gif(interaction, author_name, text):
             gif_buf.close()
             del gif_buf
 
-async def handle_quote(interaction, message: discord.Message):
+async def handle_quote(interaction: discord.Interaction, message: discord.Message):
     if not message.content:
-        await interaction.followup.send("This message has no text content to quote", ephemeral=True)
+        has_content = message.attachments or message.embeds or message.stickers
+        
+        if has_content:
+            await interaction.followup.send("This message has no text content to quote", ephemeral=True)
+        else:
+            error_msg = "This message has no text content to quote"
+            if interaction.is_guild_integration():
+                error_msg += "\n-# Try installing the bot as User Install to resolve permission issues (Click on the bot -> Add app -> Add to my apps)"
+            
+            await interaction.followup.send(error_msg, ephemeral=True)
         return
     
     if len(message.content) > 500:
