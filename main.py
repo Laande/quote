@@ -94,6 +94,8 @@ async def send_quote_gif(interaction, author_name, text):
         gif_buf = await make_gif(author_name, text)
         file = discord.File(fp=gif_buf, filename="quote.gif")
         await interaction.followup.send(file=file)
+    except discord.Forbidden:
+        await interaction.followup.send("Bot doesn't have permission to send messages or attach files in this channel", ephemeral=True)
     except Exception as e:
         print(f"Error creating GIF: {e}")
         await interaction.followup.send("Failed to create GIF", ephemeral=True)
