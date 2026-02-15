@@ -16,7 +16,11 @@ client = discord.Client(
     max_messages=None,
     member_cache_flags=discord.MemberCacheFlags.none()
 )
-tree = app_commands.CommandTree(client)
+tree = app_commands.CommandTree(client, allowed_contexts=app_commands.AppCommandContext(
+        guild=True,
+        dm_channel=True,
+        private_channel=True
+    ))
 STATS_FILE = "bot_stats.json"
 
 
