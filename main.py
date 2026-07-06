@@ -1,12 +1,12 @@
 import os
-import requests
 import json
+import asyncio
 import discord
 from discord.ext import tasks
 from discord import app_commands
 from dotenv import load_dotenv
+
 from create_gif import create_dynamic_gif
-import asyncio
 
 
 intents = discord.Intents.default()
@@ -21,6 +21,7 @@ tree = app_commands.CommandTree(client, allowed_contexts=app_commands.AppCommand
         dm_channel=True,
         private_channel=True
     ))
+
 STATS_FILE = "bot_stats.json"
 
 
@@ -36,28 +37,6 @@ def save_stats(stats):
         json.dump(stats, f, indent=2)
 
 stats = load_stats()
-
-
-def _fetch_quote_sync():
-    req = requests.get("http://api.quotable.io/random", timeout=5)
-    if req.status_code == 200:
-        data = req.json()
-        return f"{data['content']} - {data['author']}"
-    return "An inspirational quote. - Lande"
-
-
-async def fetch_random_quote():
-    try:
-        return await asyncio.to_thread(_fetch_quote_sync)
-    except Exception as e:
-        print(f"Failed to fetch quote: {e}")
-        return "An inspirational quote. - Lande"
-
-
-@tasks.loop(minutes=30)
-async def update_status():
-    quote = await fetch_random_quote()
-    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=quote))
 
 
 @tasks.loop(hours=10)
@@ -78,7 +57,6 @@ async def on_ready():
     print(f"Connected as {client.user}")
     await tree.sync()
     update_server_count.start()
-    update_status.start()
 
 
 async def make_gif(author, text):
