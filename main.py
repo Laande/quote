@@ -2,10 +2,10 @@ import os
 import json
 import asyncio
 import discord
+from concurrent.futures import ThreadPoolExecutor
 from discord.ext import tasks
 from discord import app_commands
 from dotenv import load_dotenv
-
 from create_gif import create_dynamic_gif
 
 
@@ -62,8 +62,11 @@ async def on_ready():
 async def make_gif(author, text):
     stats["gifs_generated"] += 1
     save_stats(stats)
-    
-    result = await asyncio.to_thread(create_dynamic_gif, author, text)
+
+    loop = asyncio.get_running_loop()
+    result = await loop.run_in_executor(
+        ThreadPoolExecutor(max_workers=5), create_dynamic_gif, author, text
+    )
     return result
 
 async def send_quote_gif(interaction, author_name, text):
