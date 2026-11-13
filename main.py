@@ -91,10 +91,16 @@ async def send_quote_gif(interaction, author_name, text):
 
 async def handle_quote(interaction: discord.Interaction, message: discord.Message):
     if not message.content:
-        has_content = message.attachments or message.embeds or message.stickers
+        has_no_content = message.attachments or message.embeds or message.stickers
         
-        if has_content:
+        if has_no_content:
             await interaction.followup.send("This message has no text content to quote", ephemeral=True)
+        elif not client.intents.message_content:
+            await interaction.followup.send(
+                "This message content isn't available.\n"
+                "-# Right click the message → **Apps** → **Quote** instead.",
+                ephemeral=True,
+            )
         else:
             error_msg = "This message has no text content to quote"
             if interaction.is_guild_integration():
@@ -119,6 +125,14 @@ async def quote_context(interaction: discord.Interaction, message: discord.Messa
 @app_commands.describe(message_link="Message link or ID to quote")
 async def quote_cmd(interaction: discord.Interaction, message_link: str):
     await interaction.response.defer()
+
+    if interaction.is_user_integration() and not interaction.is_guild_integration():
+        await interaction.followup.send(
+            "Message can't be read by a user-installed app.\n"
+            "-# Right click the message → **Apps** → **Quote** instead.",
+            ephemeral=True,
+        )
+        return
 
     if interaction.guild is None:
         await interaction.followup.send("This command can only be used in a server", ephemeral=True)
@@ -204,4 +218,17 @@ async def help_cmd(interaction: discord.Interaction):
 
 if __name__ == "__main__":
     load_dotenv()
-    client.run(os.getenv("TOKEN"))
+    token = os.getenv("TOKEN")
+
+    async def runner():
+        try:
+            await client.start(token)
+        except discord.PrivilegedIntentsRequired:
+            print("Message Content intent not enabled for this app, starting without it.")
+            await client.http.close()
+            client.http = discord.http.HTTPClient(client.loop)
+            client._connection.http = client.http
+            client._connection._intents.message_content = False
+            await client.start(token)
+
+    asyncio.run(runner())
